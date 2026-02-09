@@ -37,6 +37,16 @@
     --radius-lg: 12px;
 }
 
+/* Focus-visible accessibility (Phase 2.2) */
+:focus-visible {
+    outline: 3px solid var(--secondary);
+    outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
 /* Reset & Base Styles */
 *, *::before, *::after {
     margin: 0;
@@ -420,7 +430,8 @@ ul {
     padding: 40px;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow);
-    transition: var(--transition);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    opacity: 0;
 }
 
 .service-card:hover {
@@ -588,7 +599,7 @@ ul {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: var(--transition);
+    transition: transform 0.3s ease;
 }
 
 .project-card:hover img {
@@ -683,6 +694,7 @@ ul {
     display: flex;
     gap: 20px;
     align-items: flex-start;
+    opacity: 0;
 }
 
 .why-icon {
@@ -726,6 +738,7 @@ ul {
     padding: 40px;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow);
+    opacity: 0;
 }
 
 .testimonial-rating {
@@ -1006,7 +1019,8 @@ ul {
     background-color: var(--white);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow);
-    transition: var(--transition);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    opacity: 0;
 }
 
 .value-card:hover {
@@ -1050,6 +1064,7 @@ ul {
 
 .team-card {
     text-align: center;
+    opacity: 0;
 }
 
 .team-image {
@@ -1063,7 +1078,7 @@ ul {
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
-    transition: var(--transition);
+    transition: transform 0.3s ease;
 }
 
 .team-card:hover .team-image img {
@@ -1137,6 +1152,7 @@ ul {
 .timeline-item {
     display: flex;
     margin-bottom: 50px;
+    opacity: 0;
 }
 
 .timeline-item:nth-child(odd) {
@@ -1356,7 +1372,7 @@ ul {
     width: 100%;
     aspect-ratio: 4/3;
     object-fit: cover;
-    transition: var(--transition);
+    transition: transform 0.3s ease;
 }
 
 .gallery-item:hover img {
@@ -1698,6 +1714,11 @@ ul {
         padding: 70px 0;
     }
 
+    .hero,
+    .cta-section {
+        background-attachment: scroll;
+    }
+
     .hero-buttons {
         flex-direction: column;
     }
@@ -1797,6 +1818,25 @@ ul {
     }
 }
 
+/* Service Areas responsive grid (Phase 3.3) */
+.service-areas-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+}
+
+@media (max-width: 992px) {
+    .service-areas-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .service-areas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Animations */
 @keyframes fadeInUp {
     from {
@@ -1811,6 +1851,34 @@ ul {
 
 .animate-fade-in-up {
     animation: fadeInUp 0.6s ease forwards;
+}
+
+/* Reduced motion support (Phase 2.3) */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    html {
+        scroll-behavior: auto;
+    }
+
+    .hero,
+    .cta-section {
+        background-attachment: scroll;
+    }
+}
+
+/* Noscript fallback for animated elements (Phase 3.5) */
+.no-js .service-card,
+.no-js .value-card,
+.no-js .team-card,
+.no-js .testimonial-card,
+.no-js .why-feature,
+.no-js .timeline-item {
+    opacity: 1;
 }
 
 /* Utility Classes */

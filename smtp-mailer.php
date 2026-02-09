@@ -42,6 +42,8 @@ class SMTPMailer {
                     return false;
                 }
 
+                stream_set_timeout($this->socket, $this->timeout);
+
                 // Read greeting
                 $this->getResponse();
 
@@ -54,12 +56,15 @@ class SMTPMailer {
                 // Enable crypto
                 if (!stream_socket_enable_crypto($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
                     $this->lastError = "Failed to enable TLS";
+                    fclose($this->socket);
                     return false;
                 }
 
                 // Send EHLO again after TLS
                 $this->sendCommand("EHLO " . gethostname());
             } else {
+                stream_set_timeout($this->socket, $this->timeout);
+
                 // Read greeting
                 $this->getResponse();
 
@@ -114,7 +119,7 @@ class SMTPMailer {
     private function sendCommand($command) {
         fputs($this->socket, $command . "\r\n");
         if ($this->debug) {
-            echo "C: $command\n";
+            error_log("SMTP C: $command");
         }
         return $this->getResponse();
     }
@@ -128,7 +133,7 @@ class SMTPMailer {
             }
         }
         if ($this->debug) {
-            echo "S: $response\n";
+            error_log("SMTP S: $response");
         }
         return $response;
     }
@@ -157,16 +162,16 @@ class SMTPMailer {
         // Plain text part
         $body[] = "--{$boundary}";
         $body[] = "Content-Type: text/plain; charset=UTF-8";
-        $body[] = "Content-Transfer-Encoding: 7bit";
+        $body[] = "Content-Transfer-Encoding: base64";
         $body[] = "";
-        $body[] = $textBody ?: strip_tags($htmlBody);
+        $body[] = chunk_split(base64_encode($textBody ?: strip_tags($htmlBody)));
 
         // HTML part
         $body[] = "--{$boundary}";
         $body[] = "Content-Type: text/html; charset=UTF-8";
-        $body[] = "Content-Transfer-Encoding: 7bit";
+        $body[] = "Content-Transfer-Encoding: base64";
         $body[] = "";
-        $body[] = $htmlBody;
+        $body[] = chunk_split(base64_encode($htmlBody));
 
         // End boundary
         $body[] = "--{$boundary}--";

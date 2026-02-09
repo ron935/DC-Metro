@@ -10,7 +10,7 @@ ini_set('display_errors', 0);
 
 // Set headers for JSON response
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost:8888');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -28,17 +28,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Load SMTP configuration from outside webroot
-\$smtpConfig = require __DIR__ . '/../config.php';
+$smtpConfig = require __DIR__ . '/../config.php';
 
-// Get and sanitize form data
-$name = isset($_POST['name']) ? htmlspecialchars(trim($_POST['name'])) : '';
-$email = isset($_POST['email']) ? filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL) : '';
-$phone = isset($_POST['phone']) ? htmlspecialchars(trim($_POST['phone'])) : 'Not provided';
-$company = isset($_POST['company']) ? htmlspecialchars(trim($_POST['company'])) : 'Not provided';
-$service = isset($_POST['service']) ? htmlspecialchars(trim($_POST['service'])) : 'Not specified';
-$budget = isset($_POST['budget']) ? htmlspecialchars(trim($_POST['budget'])) : 'Not specified';
-$timeline = isset($_POST['timeline']) ? htmlspecialchars(trim($_POST['timeline'])) : 'Not specified';
-$message = isset($_POST['message']) ? htmlspecialchars(trim($_POST['message'])) : '';
+// Get and sanitize form data with header injection protection and length limits
+$name = isset($_POST['name']) ? mb_substr(htmlspecialchars(trim(str_replace(["\r", "\n"], '', $_POST['name']))), 0, 100) : '';
+$email = isset($_POST['email']) ? mb_substr(filter_var(trim(str_replace(["\r", "\n"], '', $_POST['email'])), FILTER_SANITIZE_EMAIL), 0, 254) : '';
+$phone = isset($_POST['phone']) ? mb_substr(htmlspecialchars(trim($_POST['phone'])), 0, 30) : 'Not provided';
+$company = isset($_POST['company']) ? mb_substr(htmlspecialchars(trim($_POST['company'])), 0, 200) : 'Not provided';
+$service = isset($_POST['service']) ? mb_substr(htmlspecialchars(trim($_POST['service'])), 0, 50) : 'Not specified';
+$budget = isset($_POST['budget']) ? mb_substr(htmlspecialchars(trim($_POST['budget'])), 0, 50) : 'Not specified';
+$timeline = isset($_POST['timeline']) ? mb_substr(htmlspecialchars(trim($_POST['timeline'])), 0, 50) : 'Not specified';
+$message = isset($_POST['message']) ? mb_substr(htmlspecialchars(trim($_POST['message'])), 0, 5000) : '';
 
 // Validate required fields
 $errors = [];
@@ -314,7 +314,7 @@ Submitted on: " . date('F j, Y \a\t g:i A') . "
             ''
         );
     } catch (Exception $e) {
-        // Best-effort: don't let confirmation email failure affect the response
+        error_log('[DC Metro] Confirmation email failed: ' . $e->getMessage(), 3, __DIR__ . '/quote-requests.log');
     }
 
     echo json_encode([
@@ -323,10 +323,10 @@ Submitted on: " . date('F j, Y \a\t g:i A') . "
     ]);
 } else {
     http_response_code(500);
+    error_log('[DC Metro] Quote email failed: ' . $mailer->getLastError(), 3, __DIR__ . '/quote-requests.log');
     echo json_encode([
         'success' => false,
-        'message' => 'Failed to send email. Please call us directly at (202) 555-1234.',
-        'error' => $mailer->getLastError()
+        'message' => 'Failed to send email. Please call us directly at (202) 555-1234.'
     ]);
 }
 ?>

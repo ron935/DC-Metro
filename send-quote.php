@@ -264,7 +264,7 @@ if ($sent) {
             <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;'>
             <p style='margin-bottom: 5px;'>If you have any questions, feel free to reach out:</p>
             <p style='margin: 5px 0;'>Phone: <strong>(202) 555-1234</strong></p>
-            <p style='margin: 5px 0;'>Email: <strong><a href='mailto:ipwemails@gmail.com'>ipwemails@gmail.com</a></strong></p>
+            <p style='margin: 5px 0;'>Email: <strong><a href='mailto:dcmetroipw@gmail.com'>dcmetroipw@gmail.com</a></strong></p>
         </div>
         <div class='footer'>
             <p>DC Metro Construction &mdash; Building Excellence in the DMV Area</p>
@@ -296,7 +296,7 @@ Project Details:
 
 If you have any questions, feel free to reach out:
 Phone: (202) 555-1234
-Email: ipwemails@gmail.com
+Email: dcmetroipw@gmail.com
 
 ---
 DC Metro Construction - Building Excellence in the DMV Area

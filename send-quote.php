@@ -30,6 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Load SMTP configuration from outside webroot
 $smtpConfig = require __DIR__ . '/../config.php';
 
+// Load Supabase configuration
+$supabaseConfig = require __DIR__ . '/../supabase-config.php';
+
 // Get and sanitize form data with header injection protection and length limits
 $name = isset($_POST['name']) ? mb_substr(htmlspecialchars(trim(str_replace(["\r", "\n"], '', $_POST['name']))), 0, 100) : '';
 $email = isset($_POST['email']) ? mb_substr(filter_var(trim(str_replace(["\r", "\n"], '', $_POST['email'])), FILTER_SANITIZE_EMAIL), 0, 254) : '';
@@ -212,6 +215,44 @@ $sent = $mailer->send(
     $email,
     $name
 );
+
+// Save quote to Supabase (best-effort, don't block on failure)
+try {
+    $quoteData = json_encode([
+        'business_id' => 'dd466cdb-7d43-4230-9a98-0fb6fbb700e8',
+        'name' => $name,
+        'email' => $email,
+        'phone' => $phone,
+        'company' => $company,
+        'service' => $serviceDisplay,
+        'budget' => $budgetDisplay,
+        'timeline' => $timelineDisplay,
+        'message' => $message
+    ]);
+
+    $ch = curl_init($supabaseConfig['url'] . '/rest/v1/quotes');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $quoteData,
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'apikey: ' . $supabaseConfig['service_role_key'],
+            'Authorization: Bearer ' . $supabaseConfig['service_role_key'],
+            'Prefer: return=minimal'
+        ],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 5
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+    if ($httpCode !== 201) {
+        error_log("[DC Metro] Supabase insert HTTP {$httpCode}: {$response} {$curlError}", 3, __DIR__ . '/quote-requests.log');
+    }
+} catch (Exception $e) {
+    error_log('[DC Metro] Supabase insert failed: ' . $e->getMessage(), 3, __DIR__ . '/quote-requests.log');
+}
 
 if ($sent) {
     // Send confirmation email to the customer (best-effort)

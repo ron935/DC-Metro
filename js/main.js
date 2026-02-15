@@ -240,16 +240,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const contactForm = document.getElementById('contactForm');
 
     if (contactForm) {
-        // Test auto-fill: add ?test to URL to pre-fill form with dummy data
-        if (new URLSearchParams(window.location.search).has('test')) {
-            document.getElementById('name').value = 'John Test';
-            document.getElementById('email').value = 'test@example.com';
-            document.getElementById('phone').value = '(202) 555-0199';
-            document.getElementById('company').value = 'Test Company LLC';
-            document.getElementById('service').value = 'commercial';
-            document.getElementById('budget').value = '100k-500k';
-            document.getElementById('timeline').value = '1-3months';
-            document.getElementById('message').value = 'This is a test submission from the auto-fill feature. Please ignore.';
+        // Test auto-fill: show button when ?test is in URL
+        var testFillBtn = document.getElementById('testFillBtn');
+        if (new URLSearchParams(window.location.search).has('test') && testFillBtn) {
+            testFillBtn.style.display = 'inline-block';
+            testFillBtn.addEventListener('click', function() {
+                document.getElementById('name').value = 'John Test';
+                document.getElementById('email').value = 'test@example.com';
+                document.getElementById('phone').value = '(202) 555-0199';
+                document.getElementById('company').value = 'Test Company LLC';
+                document.getElementById('service').value = 'commercial';
+                document.getElementById('budget').value = '100k-500k';
+                document.getElementById('timeline').value = '1-3months';
+                document.getElementById('message').value = 'This is a test submission from the auto-fill feature. Please ignore.';
+            });
         }
 
         contactForm.addEventListener('submit', function(e) {

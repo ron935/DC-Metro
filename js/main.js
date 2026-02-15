@@ -252,19 +252,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('message').value = 'This is a test submission from the auto-fill feature. Please ignore.';
         }
 
-        // Returning visitor: load saved contact info from localStorage
-        try {
-            var saved = JSON.parse(localStorage.getItem('dcmetro_contact'));
-            if (saved) {
-                ['name', 'email', 'phone', 'company'].forEach(function(field) {
-                    var el = document.getElementById(field);
-                    if (el && saved[field] && !el.value) {
-                        el.value = saved[field];
-                    }
-                });
-            }
-        } catch(e) { /* ignore corrupt localStorage */ }
-
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -339,16 +326,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(function(data) {
                     if (data.success) {
-                        // Save contact info for returning visitors
-                        try {
-                            localStorage.setItem('dcmetro_contact', JSON.stringify({
-                                name: name.value.trim(),
-                                email: email.value.trim(),
-                                phone: phone.value.trim(),
-                                company: (document.getElementById('company').value || '').trim()
-                            }));
-                        } catch(e) { /* localStorage full or unavailable */ }
-
                         formMessage.style.backgroundColor = '#22c55e';
                         formMessage.textContent = data.message || 'Thank you for your message! We will get back to you soon.';
                         formMessage.style.display = 'block';

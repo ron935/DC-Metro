@@ -10,7 +10,7 @@ ini_set('display_errors', 0);
 
 // Set headers for JSON response
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://192.168.1.64:8888');
+header('Access-Control-Allow-Origin: http://localhost:8888');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 

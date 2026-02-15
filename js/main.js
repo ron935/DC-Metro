@@ -240,6 +240,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const contactForm = document.getElementById('contactForm');
 
     if (contactForm) {
+        // Test auto-fill: add ?test to URL to pre-fill form with dummy data
+        if (new URLSearchParams(window.location.search).has('test')) {
+            document.getElementById('name').value = 'John Test';
+            document.getElementById('email').value = 'test@example.com';
+            document.getElementById('phone').value = '(202) 555-0199';
+            document.getElementById('company').value = 'Test Company LLC';
+            document.getElementById('service').value = 'commercial';
+            document.getElementById('budget').value = '100k-500k';
+            document.getElementById('timeline').value = '1-3months';
+            document.getElementById('message').value = 'This is a test submission from the auto-fill feature. Please ignore.';
+        }
+
+        // Returning visitor: load saved contact info from localStorage
+        try {
+            var saved = JSON.parse(localStorage.getItem('dcmetro_contact'));
+            if (saved) {
+                ['name', 'email', 'phone', 'company'].forEach(function(field) {
+                    var el = document.getElementById(field);
+                    if (el && saved[field] && !el.value) {
+                        el.value = saved[field];
+                    }
+                });
+            }
+        } catch(e) { /* ignore corrupt localStorage */ }
+
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -252,7 +277,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Clear previous errors
             document.querySelectorAll('.form-error').forEach(function(el) { el.remove(); });
-            document.querySelectorAll('.form-success, .form-error-msg').forEach(function(el) { el.remove(); });
+            var formMessage = document.getElementById('formMessage');
+            formMessage.style.display = 'none';
             document.querySelectorAll('.form-group input, .form-group textarea').forEach(function(el) {
                 el.style.borderColor = '';
             });
@@ -298,38 +324,52 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: formData
                 })
                 .then(function(response) {
-                    if (!response.ok) {
-                        return response.json().then(function(data) {
-                            throw new Error(data.message || 'Server error');
-                        });
-                    }
-                    return response.json();
+                    return response.text().then(function(text) {
+                        try {
+                            var data = JSON.parse(text);
+                            if (!response.ok) {
+                                throw new Error(data.message || 'Server error');
+                            }
+                            return data;
+                        } catch(e) {
+                            if (!response.ok) throw new Error('Server error');
+                            throw new Error('Invalid response from server');
+                        }
+                    });
                 })
                 .then(function(data) {
                     if (data.success) {
-                        var successMsg = document.createElement('div');
-                        successMsg.className = 'form-success';
-                        successMsg.setAttribute('role', 'alert');
-                        successMsg.style.cssText = 'background-color: #22c55e; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;';
-                        successMsg.textContent = data.message || 'Thank you for your message! We will get back to you soon.';
-                        contactForm.insertBefore(successMsg, contactForm.firstChild);
+                        // Save contact info for returning visitors
+                        try {
+                            localStorage.setItem('dcmetro_contact', JSON.stringify({
+                                name: name.value.trim(),
+                                email: email.value.trim(),
+                                phone: phone.value.trim(),
+                                company: (document.getElementById('company').value || '').trim()
+                            }));
+                        } catch(e) { /* localStorage full or unavailable */ }
+
+                        formMessage.style.backgroundColor = '#22c55e';
+                        formMessage.textContent = data.message || 'Thank you for your message! We will get back to you soon.';
+                        formMessage.style.display = 'block';
 
                         contactForm.reset();
 
-                        setTimeout(function() {
-                            successMsg.remove();
-                        }, 5000);
-                    } else {
-                        var errorMsg = document.createElement('div');
-                        errorMsg.className = 'form-error-msg';
-                        errorMsg.setAttribute('role', 'alert');
-                        errorMsg.style.cssText = 'background-color: #ef4444; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;';
-                        errorMsg.textContent = data.message || 'There was an error sending your message. Please try again or call us directly.';
-                        contactForm.insertBefore(errorMsg, contactForm.firstChild);
+                        formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
                         setTimeout(function() {
-                            errorMsg.remove();
-                        }, 5000);
+                            formMessage.style.display = 'none';
+                        }, 10000);
+                    } else {
+                        formMessage.style.backgroundColor = '#ef4444';
+                        formMessage.textContent = data.message || 'There was an error sending your message. Please try again or call us directly.';
+                        formMessage.style.display = 'block';
+
+                        formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        setTimeout(function() {
+                            formMessage.style.display = 'none';
+                        }, 10000);
                     }
 
                     submitBtn.textContent = originalText;
@@ -337,20 +377,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     submitBtn.setAttribute('aria-busy', 'false');
                 })
                 .catch(function(error) {
-                    var errorMsg = document.createElement('div');
-                    errorMsg.className = 'form-error-msg';
-                    errorMsg.setAttribute('role', 'alert');
-                    errorMsg.style.cssText = 'background-color: #ef4444; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;';
-                    errorMsg.textContent = error.message || 'There was an error sending your message. Please try again or call us directly.';
-                    contactForm.insertBefore(errorMsg, contactForm.firstChild);
+                    formMessage.style.backgroundColor = '#ef4444';
+                    formMessage.textContent = error.message || 'There was an error sending your message. Please try again or call us directly.';
+                    formMessage.style.display = 'block';
+
+                    formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                     submitBtn.setAttribute('aria-busy', 'false');
 
                     setTimeout(function() {
-                        errorMsg.remove();
-                    }, 5000);
+                        formMessage.style.display = 'none';
+                    }, 10000);
                 });
             }
         });

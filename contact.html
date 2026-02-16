@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
     <!-- Header -->
@@ -191,6 +192,7 @@
                             <label for="message">Project Details *</label>
                             <textarea id="message" name="message" rows="5" placeholder="Please describe your project, including location, size, and any specific requirements..." required></textarea>
                         </div>
+                        <div class="cf-turnstile" data-sitekey="0x4AAAAAACeAYkXemnA8-ncg" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired" style="margin-bottom: 15px;"></div>
                         <div class="form-submit">
                             <button type="submit" class="btn btn-primary btn-lg">Submit Request</button>
                         </div>

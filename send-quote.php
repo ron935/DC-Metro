@@ -43,6 +43,36 @@ $budget = isset($_POST['budget']) ? mb_substr(htmlspecialchars(trim($_POST['budg
 $timeline = isset($_POST['timeline']) ? mb_substr(htmlspecialchars(trim($_POST['timeline'])), 0, 50) : 'Not specified';
 $message = isset($_POST['message']) ? mb_substr(htmlspecialchars(trim($_POST['message'])), 0, 5000) : '';
 
+// Verify Turnstile CAPTCHA
+$turnstileToken = isset($_POST['cf-turnstile-response']) ? $_POST['cf-turnstile-response'] : '';
+if (empty($turnstileToken)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Security verification required. Please try again.']);
+    exit();
+}
+
+$turnstileCh = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+curl_setopt_array($turnstileCh, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => http_build_query([
+        'secret' => $smtpConfig['turnstile_secret'],
+        'response' => $turnstileToken,
+        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+    ]),
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 5,
+]);
+$turnstileResult = curl_exec($turnstileCh);
+curl_close($turnstileCh);
+
+$turnstileData = json_decode($turnstileResult, true);
+if (!$turnstileData || empty($turnstileData['success'])) {
+    http_response_code(400);
+    error_log('[DC Metro] Turnstile verification failed: ' . ($turnstileResult ?: 'no response'), 3, __DIR__ . '/quote-requests.log');
+    echo json_encode(['success' => false, 'message' => 'Security verification failed. Please try again.']);
+    exit();
+}
+
 // Validate required fields
 $errors = [];
 

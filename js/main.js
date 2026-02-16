@@ -301,6 +301,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 isValid = false;
             }
 
+            // Validate Turnstile
+            var turnstileResponse = contactForm.querySelector('[name="cf-turnstile-response"]');
+            if (!turnstileResponse || !turnstileResponse.value) {
+                formMessage.style.backgroundColor = '#ef4444';
+                formMessage.textContent = 'Please complete the security verification.';
+                formMessage.style.display = 'block';
+                formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                isValid = false;
+            }
+
             if (isValid) {
                 var submitBtn = contactForm.querySelector('button[type="submit"]');
                 var originalText = submitBtn.textContent;
@@ -316,16 +326,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(function(response) {
                     return response.text().then(function(text) {
+                        var data;
                         try {
-                            var data = JSON.parse(text);
-                            if (!response.ok) {
-                                throw new Error(data.message || 'Server error');
-                            }
-                            return data;
+                            data = JSON.parse(text);
                         } catch(e) {
                             if (!response.ok) throw new Error('Server error');
                             throw new Error('Invalid response from server');
                         }
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Server error');
+                        }
+                        return data;
                     });
                 })
                 .then(function(data) {
@@ -335,6 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         formMessage.style.display = 'block';
 
                         contactForm.reset();
+                        if (typeof turnstile !== 'undefined') { turnstile.reset(); }
 
                         formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -367,6 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                     submitBtn.setAttribute('aria-busy', 'false');
+                    if (typeof turnstile !== 'undefined') { turnstile.reset(); }
 
                     setTimeout(function() {
                         formMessage.style.display = 'none';
@@ -443,3 +456,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Turnstile callbacks (must be global for data-callback/data-expired-callback)
+function onTurnstileSuccess() {
+    var msg = document.getElementById('formMessage');
+    if (msg && msg.textContent === 'Please complete the security verification.') {
+        msg.style.display = 'none';
+    }
+}
+
+function onTurnstileExpired() {
+    // Token expired — will be re-validated on next submit attempt
+}

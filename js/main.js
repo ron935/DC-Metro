@@ -236,6 +236,105 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- Project lightbox ---
+    const lightbox = document.getElementById('projectLightbox');
+
+    if (lightbox && galleryItems.length > 0) {
+        var lightboxImage = document.getElementById('lightboxImage');
+        var lightboxTitle = document.getElementById('lightboxTitle');
+        var lightboxCategory = document.getElementById('lightboxCategory');
+        var lightboxLocation = document.getElementById('lightboxLocation');
+        var lightboxDescription = document.getElementById('lightboxDescription');
+        var lightboxYear = document.getElementById('lightboxYear');
+        var lightboxSize = document.getElementById('lightboxSize');
+        var lightboxBAToggle = document.getElementById('lightboxBAToggle');
+        var currentLightboxIndex = 0;
+
+        function getVisibleItems() {
+            var items = [];
+            galleryItems.forEach(function(item) {
+                if (item.style.display !== 'none') {
+                    items.push(item);
+                }
+            });
+            return items.length > 0 ? items : Array.from(galleryItems);
+        }
+
+        function openLightbox(item) {
+            var visibleItems = getVisibleItems();
+            currentLightboxIndex = visibleItems.indexOf(item);
+            if (currentLightboxIndex === -1) currentLightboxIndex = 0;
+            populateLightbox(item);
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function populateLightbox(item) {
+            var fullSrc = item.getAttribute('data-full') || item.querySelector('img').src;
+            lightboxImage.src = fullSrc;
+            lightboxImage.alt = item.getAttribute('data-title') || '';
+            lightboxTitle.textContent = item.getAttribute('data-title') || '';
+            lightboxCategory.textContent = item.querySelector('.gallery-category').textContent;
+            lightboxLocation.textContent = item.getAttribute('data-location') || '';
+            lightboxDescription.textContent = item.getAttribute('data-description') || '';
+            lightboxYear.textContent = item.getAttribute('data-year') || '';
+            lightboxSize.textContent = item.getAttribute('data-size') || '';
+
+            // Before/After toggle
+            var hasBefore = item.getAttribute('data-before');
+            var hasAfter = item.getAttribute('data-after');
+            if (hasBefore && hasAfter) {
+                lightboxBAToggle.style.display = '';
+                var baBtns = lightboxBAToggle.querySelectorAll('.ba-btn');
+                baBtns.forEach(function(btn) { btn.classList.remove('active'); });
+                baBtns[0].classList.add('active');
+                lightboxImage.src = hasBefore;
+
+                baBtns.forEach(function(btn) {
+                    btn.onclick = function() {
+                        baBtns.forEach(function(b) { b.classList.remove('active'); });
+                        btn.classList.add('active');
+                        lightboxImage.src = btn.getAttribute('data-ba') === 'before' ? hasBefore : hasAfter;
+                    };
+                });
+            } else {
+                lightboxBAToggle.style.display = 'none';
+            }
+        }
+
+        function navigateLightbox(direction) {
+            var visibleItems = getVisibleItems();
+            currentLightboxIndex = (currentLightboxIndex + direction + visibleItems.length) % visibleItems.length;
+            populateLightbox(visibleItems[currentLightboxIndex]);
+        }
+
+        galleryItems.forEach(function(item) {
+            item.addEventListener('click', function() {
+                openLightbox(item);
+            });
+        });
+
+        lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+        lightbox.querySelector('.lightbox-prev').addEventListener('click', function() { navigateLightbox(-1); });
+        lightbox.querySelector('.lightbox-next').addEventListener('click', function() { navigateLightbox(1); });
+
+        lightbox.addEventListener('click', function(e) {
+            if (e.target === lightbox) closeLightbox();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (!lightbox.classList.contains('active')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') navigateLightbox(-1);
+            if (e.key === 'ArrowRight') navigateLightbox(1);
+        });
+    }
+
     // --- Form validation and submission (Phase 1.3 - error handling, XSS, aria) ---
     const contactForm = document.getElementById('contactForm');
 

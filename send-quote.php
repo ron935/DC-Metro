@@ -37,6 +37,10 @@ $smtpConfig = require __DIR__ . '/../config.php';
 // Load Supabase configuration
 $supabaseConfig = require __DIR__ . '/../supabase-config.php';
 
+// Strip any invisible/non-ASCII characters added by file editors
+foreach ($supabaseConfig as $k => $v) { if (is_string($v)) $supabaseConfig[$k] = preg_replace('/[^\x20-\x7E]/', '', $v); }
+foreach ($smtpConfig as $k => $v) { if (is_string($v)) $smtpConfig[$k] = preg_replace('/[^\x20-\x7E]/', '', $v); }
+
 // Get and sanitize form data with header injection protection and length limits
 $name = isset($_POST['name']) ? mb_substr(htmlspecialchars(trim(str_replace(["\r", "\n"], '', $_POST['name']))), 0, 100) : '';
 $email = isset($_POST['email']) ? mb_substr(filter_var(trim(str_replace(["\r", "\n"], '', $_POST['email'])), FILTER_SANITIZE_EMAIL), 0, 254) : '';

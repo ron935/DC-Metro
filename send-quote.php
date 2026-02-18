@@ -641,7 +641,42 @@ Submitted on: " . date('F j, Y \a\t g:i A') . "
     ]);
 } else {
     http_response_code(500);
-    error_log('[DC Metro] Quote email failed: ' . $mailer->getLastError(), 3, __DIR__ . '/quote-requests.log');
+    $smtpError = $mailer->getLastError();
+    error_log('[DC Metro] Quote email failed: ' . $smtpError, 3, __DIR__ . '/quote-requests.log');
+
+    // Backup: try to alert admin that a quote submission email failed
+    // The quote is still saved in Supabase, but the admin should know email delivery failed
+    try {
+        $failAlertSubject = '[ALERT] Quote email delivery failed — ' . $name;
+        $failAlertHtml = "
+<!DOCTYPE html><html><body style='font-family:Arial,sans-serif;color:#333;padding:20px'>
+<div style='max-width:600px;margin:0 auto'>
+<div style='background:#ef4444;color:white;padding:20px;border-radius:8px 8px 0 0;text-align:center'>
+<h2 style='margin:0'>Email Delivery Failed</h2></div>
+<div style='background:#fef2f2;padding:25px;border:1px solid #fecaca'>
+<p>A quote form submission email <strong>failed to deliver</strong>. The quote has been saved to the dashboard database.</p>
+<p><strong>Customer:</strong> {$name} ({$email})</p>
+<p><strong>Service:</strong> {$serviceDisplay}</p>
+<p><strong>Error:</strong> {$smtpError}</p>
+<p style='margin-top:20px'><a href='http://localhost:8888/dashboard/' style='background:#1a5f7a;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold'>View in Dashboard</a></p>
+</div></div></body></html>";
+
+        $failAlertText = "ALERT: Quote email delivery failed\n\nCustomer: {$name} ({$email})\nService: {$serviceDisplay}\nError: {$smtpError}\n\nThe quote has been saved in the dashboard. Please review it there.";
+
+        $mailer->send(
+            $smtpConfig['from_email'],
+            'IPW Alert System',
+            $smtpConfig['to_email'],
+            $failAlertSubject,
+            $failAlertHtml,
+            $failAlertText,
+            '',
+            ''
+        );
+    } catch (Exception $e) {
+        error_log('[DC Metro] Backup failure alert also failed: ' . $e->getMessage(), 3, __DIR__ . '/quote-requests.log');
+    }
+
     echo json_encode([
         'success' => false,
         'message' => 'Failed to send email. Please call us directly at (202) 555-1234.'

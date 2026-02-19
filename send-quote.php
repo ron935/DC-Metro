@@ -437,7 +437,7 @@ try {
     <div class='container'>
         <div class='header'>
             <h1>New Quote Request</h1>
-            <p style='margin: 10px 0 0 0; opacity: 0.9;'>DC Metro Construction</p>
+            <p style='margin: 10px 0 0 0; opacity: 0.9;'>IPW Dashboard</p>
         </div>
         <div class='content'>
             <p style='font-size: 16px; margin-top: 0;'>Hi {$userName},</p>
@@ -471,7 +471,7 @@ try {
                 <div class='message-box'>{$messagePreview}</div>
             </div>
             <div class='cta'>
-                <a href='http://localhost:8888/dashboard/'>View in Dashboard</a>
+                <a href='https://aquamarine-peafowl-476925.hostingersite.com/dashboard/'>View in Dashboard</a>
             </div>
         </div>
         <div class='footer'>
@@ -482,7 +482,7 @@ try {
 </body>
 </html>";
 
-            $notifText = "NEW QUOTE REQUEST — DC METRO CONSTRUCTION
+            $notifText = "NEW QUOTE REQUEST — IPW DASHBOARD
 ==========================================
 
 Hi {$userName},
@@ -506,8 +506,8 @@ IPW Dashboard Notification
 You received this because you have New Quote Alerts enabled.";
 
             $notifSent = $mailer->send(
-                $smtpConfig['from_email'],
-                $smtpConfig['from_name'],
+                $smtpConfig['username'],
+                'IPW Dashboard',
                 $userEmail,
                 $notifSubject,
                 $notifHtml,

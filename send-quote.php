@@ -41,6 +41,27 @@ $supabaseConfig = require __DIR__ . '/../supabase-config.php';
 foreach ($supabaseConfig as $k => $v) { if (is_string($v)) $supabaseConfig[$k] = preg_replace('/[^\x20-\x7E]/', '', $v); }
 foreach ($smtpConfig as $k => $v) { if (is_string($v)) $smtpConfig[$k] = preg_replace('/[^\x20-\x7E]/', '', $v); }
 
+// Fetch business-specific email from Supabase
+$businessId = 'dd466cdb-7d43-4230-9a98-0fb6fbb700e8';
+$bizUrl = $supabaseConfig['url'] . '/rest/v1/businesses?id=eq.' . $businessId . '&select=contact_email,name';
+$bizCh = curl_init($bizUrl);
+curl_setopt_array($bizCh, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER => [
+        'apikey: ' . $supabaseConfig['service_role_key'],
+        'Authorization: Bearer ' . $supabaseConfig['service_role_key'],
+    ],
+    CURLOPT_TIMEOUT => 5,
+]);
+$bizResult = json_decode(curl_exec($bizCh), true);
+curl_close($bizCh);
+
+if (!empty($bizResult[0]['contact_email'])) {
+    // from_email stays as SMTP authenticated account (ipwemails@gmail.com) to avoid spam filters
+    $smtpConfig['from_name'] = $bizResult[0]['name'] ?? 'DC Metro Construction';
+    $smtpConfig['to_email'] = $bizResult[0]['contact_email'];
+}
+
 // Get and sanitize form data with header injection protection and length limits
 $name = isset($_POST['name']) ? mb_substr(htmlspecialchars(trim(str_replace(["\r", "\n"], '', $_POST['name']))), 0, 100) : '';
 $email = isset($_POST['email']) ? mb_substr(filter_var(trim(str_replace(["\r", "\n"], '', $_POST['email'])), FILTER_SANITIZE_EMAIL), 0, 254) : '';

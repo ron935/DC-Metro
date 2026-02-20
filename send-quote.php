@@ -10,7 +10,7 @@ ini_set('display_errors', 0);
 
 // Set headers for JSON response
 header('Content-Type: application/json');
-$allowedOrigins = ['http://localhost:8888', 'https://aquamarine-peafowl-476925.hostingersite.com'];
+$allowedOrigins = ['https://aquamarine-peafowl-476925.hostingersite.com'];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $allowedOrigins)) {
     header('Access-Control-Allow-Origin: ' . $origin);
@@ -679,7 +679,7 @@ Submitted on: " . date('F j, Y \a\t g:i A') . "
 <p><strong>Customer:</strong> {$name} ({$email})</p>
 <p><strong>Service:</strong> {$serviceDisplay}</p>
 <p><strong>Error:</strong> {$smtpError}</p>
-<p style='margin-top:20px'><a href='http://localhost:8888/dashboard/' style='background:#1a5f7a;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold'>View in Dashboard</a></p>
+<p style='margin-top:20px'><a href='https://aquamarine-peafowl-476925.hostingersite.com/dashboard/' style='background:#1a5f7a;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold'>View in Dashboard</a></p>
 </div></div></body></html>";
 
         $failAlertText = "ALERT: Quote email delivery failed\n\nCustomer: {$name} ({$email})\nService: {$serviceDisplay}\nError: {$smtpError}\n\nThe quote has been saved in the dashboard. Please review it there.";

@@ -930,6 +930,12 @@ ul {
     color: var(--secondary);
 }
 
+.footer-bottom .powered-by {
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
 /* Page Header (Internal Pages) */
 .page-header {
     padding: 180px 0 100px;

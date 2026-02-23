@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         requestAnimationFrame(function() {
             const scrollY = window.scrollY;
-            const pageYOffset = window.pageYOffset;
 
             // Header scroll effect (with null guard - Phase 1.5)
             if (header) {
@@ -63,13 +62,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 parallaxElements.forEach(function(el) {
                     var rect = el.getBoundingClientRect();
                     if (rect.bottom > 0 && rect.top < window.innerHeight) {
-                        el.style.backgroundPositionY = (pageYOffset * 0.5) + 'px';
+                        el.style.backgroundPositionY = (scrollY * 0.5) + 'px';
                     }
                 });
             }
 
             // Back to top visibility
-            if (pageYOffset > 500) {
+            if (scrollY > 500) {
                 backToTop.style.opacity = '1';
                 backToTop.style.visibility = 'visible';
             } else {
@@ -175,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 var target = document.querySelector(href);
                 if (target) {
                     var headerHeight = header ? header.offsetHeight : 0;
-                    var targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                    var targetPosition = target.getBoundingClientRect().top + window.scrollY - headerHeight;
                     window.scrollTo({
                         top: targetPosition,
                         behavior: 'smooth'
@@ -189,12 +188,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const animatedElements = document.querySelectorAll('.service-card, .value-card, .team-card, .testimonial-card, .why-feature, .timeline-item');
 
     if (animatedElements.length > 0) {
+        var staggerCount = 0;
         var animationObserver = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry, index) {
+            entries.forEach(function(entry) {
                 if (entry.isIntersecting) {
+                    var delay = staggerCount * 100;
+                    staggerCount++;
                     setTimeout(function() {
                         entry.target.classList.add('animate-fade-in-up');
-                    }, index * 100);
+                    }, delay);
                     animationObserver.unobserve(entry.target);
                 }
             });
@@ -260,18 +262,26 @@ document.addEventListener('DOMContentLoaded', function() {
             return items.length > 0 ? items : Array.from(galleryItems);
         }
 
+        var lightboxTrigger = null;
+
         function openLightbox(item) {
+            lightboxTrigger = item;
             var visibleItems = getVisibleItems();
             currentLightboxIndex = visibleItems.indexOf(item);
             if (currentLightboxIndex === -1) currentLightboxIndex = 0;
             populateLightbox(item);
             lightbox.classList.add('active');
             document.body.style.overflow = 'hidden';
+            lightbox.querySelector('.lightbox-close').focus();
         }
 
         function closeLightbox() {
             lightbox.classList.remove('active');
             document.body.style.overflow = '';
+            if (lightboxTrigger) {
+                lightboxTrigger.focus();
+                lightboxTrigger = null;
+            }
         }
 
         function populateLightbox(item) {
@@ -317,6 +327,12 @@ document.addEventListener('DOMContentLoaded', function() {
             item.addEventListener('click', function() {
                 openLightbox(item);
             });
+            item.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openLightbox(item);
+                }
+            });
         });
 
         lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
@@ -332,6 +348,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.key === 'Escape') closeLightbox();
             if (e.key === 'ArrowLeft') navigateLightbox(-1);
             if (e.key === 'ArrowRight') navigateLightbox(1);
+            if (e.key === 'Tab') {
+                var focusable = lightbox.querySelectorAll('button:not([style*="display:none"]):not([style*="display: none"])');
+                var first = focusable[0];
+                var last = focusable[focusable.length - 1];
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
         });
     }
 
@@ -506,53 +538,44 @@ document.addEventListener('DOMContentLoaded', function() {
         return /^[\d\s\-\(\)\+]+$/.test(phone) && phone.replace(/\D/g, '').length >= 10;
     }
 
-    // --- Lazy loading for images ---
-    const lazyImages = document.querySelectorAll('img[data-src]');
-
-    if (lazyImages.length > 0) {
-        var imageObserver = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
-                if (entry.isIntersecting) {
-                    var img = entry.target;
-                    img.src = img.dataset.src;
-                    img.removeAttribute('data-src');
-                    imageObserver.unobserve(img);
-                }
-            });
-        });
-
-        lazyImages.forEach(function(img) { imageObserver.observe(img); });
-    }
-
     // --- Testimonial slider with visibility cleanup (Phase 3.4) ---
     const testimonialSlider = document.querySelector('.testimonials-slider');
 
-    if (testimonialSlider && window.innerWidth < 992) {
+    if (testimonialSlider) {
         var currentSlide = 0;
         var slides = testimonialSlider.querySelectorAll('.testimonial-card');
         var totalSlides = slides.length;
+        var sliderInterval = null;
 
-        var sliderInterval = setInterval(function() {
-            currentSlide = (currentSlide + 1) % totalSlides;
-            testimonialSlider.scrollTo({
-                left: slides[currentSlide].offsetLeft - 20,
-                behavior: 'smooth'
-            });
-        }, 5000);
+        function startSlider() {
+            if (sliderInterval) return;
+            sliderInterval = setInterval(function() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                testimonialSlider.scrollTo({
+                    left: slides[currentSlide].offsetLeft - 20,
+                    behavior: 'smooth'
+                });
+            }, 5000);
+        }
 
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
+        function stopSlider() {
+            if (sliderInterval) {
                 clearInterval(sliderInterval);
-            } else {
-                sliderInterval = setInterval(function() {
-                    currentSlide = (currentSlide + 1) % totalSlides;
-                    testimonialSlider.scrollTo({
-                        left: slides[currentSlide].offsetLeft - 20,
-                        behavior: 'smooth'
-                    });
-                }, 5000);
+                sliderInterval = null;
             }
-        });
+        }
+
+        function checkSlider() {
+            if (window.innerWidth < 992 && !document.hidden) {
+                startSlider();
+            } else {
+                stopSlider();
+            }
+        }
+
+        checkSlider();
+        window.addEventListener('resize', checkSlider);
+        document.addEventListener('visibilitychange', checkSlider);
     }
 });
 

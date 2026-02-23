@@ -712,7 +712,8 @@ ul {
     justify-content: center;
 }
 
-.why-text h4 {
+.why-text h3 {
+    font-size: 1.125rem;
     margin-bottom: 8px;
 }
 
@@ -1320,7 +1321,7 @@ ul {
     margin: 0 auto 20px;
 }
 
-.process-card h4 {
+.process-card h3 {
     font-size: 1rem;
     margin-bottom: 10px;
 }
@@ -1860,6 +1861,7 @@ ul {
         right: -100%;
         width: 300px;
         height: 100vh;
+        height: 100dvh;
         background-color: var(--white);
         flex-direction: column;
         align-items: flex-start;
@@ -2076,6 +2078,29 @@ ul {
     .service-areas-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Stats centered variant (projects page) */
+.stats-centered {
+    justify-content: center;
+}
+
+.stat-centered {
+    text-align: center;
+}
+
+.stat-centered .stat-number {
+    color: var(--primary);
+}
+
+.stat-centered .stat-label {
+    color: var(--gray-600);
+}
+
+/* Gallery item keyboard focus */
+.gallery-item:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
 }
 
 /* Animations */

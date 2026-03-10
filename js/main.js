@@ -6,6 +6,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const header = document.getElementById('header');
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // Centralized API base URL
+    var _isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    var apiBase = _isLocal
+        ? 'http://localhost:8888/dashboard/api'
+        : 'https://blue-panther-862989.hostingersite.com/api';
+
     // --- Consolidated scroll handler (Phase 3.1) ---
     const parallaxElements = document.querySelectorAll('.hero, .cta-section');
     const sections = document.querySelectorAll('section[id]');
@@ -451,7 +457,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 var formData = new FormData(contactForm);
 
-                fetch('send-quote.php', {
+                // Attach UTM params and referrer for lead source attribution
+                try {
+                    var sp = new URLSearchParams(location.search);
+                    if (sp.get('utm_source')) formData.append('utm_source', sp.get('utm_source'));
+                    if (sp.get('utm_medium')) formData.append('utm_medium', sp.get('utm_medium'));
+                    if (sp.get('utm_campaign')) formData.append('utm_campaign', sp.get('utm_campaign'));
+                } catch(e) {}
+                if (document.referrer) formData.append('referrer', document.referrer);
+                formData.append('source', location.href);
+
+                fetch(apiBase + '/submit-quote.php', {
                     method: 'POST',
                     body: formData
                 })

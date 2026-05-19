@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var _isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     var apiBase = _isLocal
         ? 'http://localhost:8888/dashboard/api'
-        : 'https://blue-panther-862989.hostingersite.com/api';
+        : 'https://ronb.ipwebsolutions.net/api';
 
     // --- Consolidated scroll handler (Phase 3.1) ---
     const parallaxElements = document.querySelectorAll('.hero, .cta-section');

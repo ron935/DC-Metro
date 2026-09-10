@@ -456,6 +456,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.setAttribute('aria-busy', 'true');
 
                 var formData = new FormData(contactForm);
+                formData.append('business', 'dcmetro');
+                formData.append('token', 'H1I9mYkI5cNQrFI7QcdnDuJ8kbMU0poB87R7ErQ2');
 
                 // Attach UTM params and referrer for lead source attribution
                 try {
@@ -467,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (document.referrer) formData.append('referrer', document.referrer);
                 formData.append('source', location.href);
 
-                fetch(apiBase + '/submit-quote.php', {
+                fetch(apiBase + '/submit-quote', {
                     method: 'POST',
                     body: formData
                 })
